@@ -138,13 +138,10 @@
     document.addEventListener('DOMContentLoaded', async () => {
       initSupabase();
       await Auth.init();
-      // Hide Admin option if an admin already exists
-const { data: admins } = await getSupabase()
-  .from('profiles')
-  .select('id')
-  .eq('role', 'admin');
+      const { data: adminExists, error } = await getSupabase()
+  .rpc('admin_exists');
 
-if (admins && admins.length > 0) {
+if (adminExists) {
   const adminOption = document.querySelector(
     '#register-role option[value="admin"]'
   );
