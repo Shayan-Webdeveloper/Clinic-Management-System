@@ -85,7 +85,7 @@ const Patients = {
     }
 
     container.innerHTML = `<div class="table-responsive">
-      <table class="table table-hover mb-0">
+      <table class="table table-hover mb-0" style = "position: relative; z-index: 0;">
         <thead><tr>
           <th>Patient ID</th><th>Name</th><th>Contact</th><th>Age</th><th>Blood Group</th><th>Status</th><th></th>
         </tr></thead>
@@ -130,7 +130,7 @@ const Patients = {
             <h5 class="modal-title" id="patientModalTitle">Add Patient</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <form id="patientForm">
+          <form id="patientForm" style = "overflow-y: scroll;">
             <div class="modal-body">
               <input type="hidden" id="patient-id">
               <div class="row g-3">

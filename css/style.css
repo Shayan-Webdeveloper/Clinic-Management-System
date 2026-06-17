@@ -473,7 +473,11 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  overflow: visible;
+}
+
+.dropdown-menu {
+  z-index: 2000;
 }
 
 .card-modern .card-header {
@@ -494,6 +498,15 @@ body {
 /* Tables */
 .table {
   font-size: 0.875rem;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  overflow-y: visible !important;
+}
+
+.dropdown-menu {
+  z-index: 2000;
 }
 
 .table thead th {
