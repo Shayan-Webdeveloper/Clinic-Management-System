@@ -505,6 +505,16 @@ body {
   overflow-y: visible !important;
 }
 
+.table-responsive .dropdown {
+  position: static;
+}
+
+.table-responsive .dropdown-menu {
+  position: absolute !important;
+  top: auto;
+  left: auto;
+}
+
 .dropdown-menu {
   z-index: 2000;
 }

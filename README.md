@@ -3,7 +3,7 @@
 A modern, responsive clinic management system built with **HTML**, **CSS**, **Bootstrap 5**, **JavaScript**, and **Supabase**.
 
 ![ClinicCare](https://img.shields.io/badge/Stack-HTML%20%7C%20Bootstrap%20%7C%20Supabase-0d9488)
-
+    
 ## Features
 
 - **Authentication** — Staff login, signup, password reset with role-based access (Admin, Doctor, Receptionist, Nurse)

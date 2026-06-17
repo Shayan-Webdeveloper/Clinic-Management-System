@@ -85,7 +85,7 @@ const Patients = {
     }
 
     container.innerHTML = `<div class="table-responsive">
-      <table class="table table-hover mb-0" style = "position: relative; z-index: 0;">
+      <table class="table table-hover mb-0">
         <thead><tr>
           <th>Patient ID</th><th>Name</th><th>Contact</th><th>Age</th><th>Blood Group</th><th>Status</th><th></th>
         </tr></thead>
@@ -104,7 +104,7 @@ const Patients = {
             <td>${p.is_archived ? '<span class="badge bg-secondary-subtle text-secondary">Archived</span>' : '<span class="badge bg-success-subtle text-success">Active</span>'}</td>
             <td>
               <div class="dropdown">
-                <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                <button class="btn btn-sm btn-light" data-bs-toggle="dropdown" data-bs-boundary="viewport"><i class="bi bi-three-dots-vertical"></i></button>
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li><a class="dropdown-item" href="#" onclick="Patients.viewPatient('${p.id}'); return false;"><i class="bi bi-eye me-2"></i>View</a></li>
                   <li><a class="dropdown-item" href="#" onclick="Patients.openEditModal('${p.id}'); return false;"><i class="bi bi-pencil me-2"></i>Edit</a></li>

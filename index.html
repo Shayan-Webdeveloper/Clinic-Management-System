@@ -138,6 +138,21 @@
     document.addEventListener('DOMContentLoaded', async () => {
       initSupabase();
       await Auth.init();
+      // Hide Admin option if an admin already exists
+const { data: admins } = await getSupabase()
+  .from('profiles')
+  .select('id')
+  .eq('role', 'admin');
+
+if (admins && admins.length > 0) {
+  const adminOption = document.querySelector(
+    '#register-role option[value="admin"]'
+  );
+
+  if (adminOption) {
+    adminOption.remove();
+  }
+}
       if (Auth.isAuthenticated()) {
         window.location.href = 'app.html';
         return;
@@ -168,20 +183,37 @@
       });
 
       document.getElementById('register-form').addEventListener('submit', async e => {
-        e.preventDefault();
-        try {
-          await Auth.signUp(
-            document.getElementById('register-email').value,
-            document.getElementById('register-password').value,
-            document.getElementById('register-name').value,
-            document.getElementById('register-role').value
-          );
-          Utils.showToast('Account created! Check your email to confirm, then sign in.');
-          show('login-panel');
-        } catch (err) {
-          Utils.showToast(err.message || 'Registration failed', 'error');
-        }
-      });
+  e.preventDefault();
+
+  try {
+    const role = document.getElementById('register-role').value;
+
+    // Check if admin already exists
+    if (role === 'admin') {
+      const { data } = await getSupabase()
+        .from('profiles')
+        .select('id')
+        .eq('role', 'admin');
+
+      if (data && data.length > 0) {
+        throw new Error('Admin account already exists. Please choose another role.');
+      }
+    }
+
+    await Auth.signUp(
+      document.getElementById('register-email').value,
+      document.getElementById('register-password').value,
+      document.getElementById('register-name').value,
+      role
+    );
+
+    Utils.showToast('Account created! Check your email to confirm, then sign in.');
+    show('login-panel');
+
+  } catch (err) {
+    Utils.showToast(err.message || 'Registration failed', 'error');
+  }
+});
 
       document.getElementById('forgot-form').addEventListener('submit', async e => {
         e.preventDefault();
