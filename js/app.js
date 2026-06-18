@@ -68,6 +68,10 @@ const App = {
   },
 
   async navigate(page) {
+    const role = Auth.profile?.role;
+
+// BLOCK non-admin users from admin pages
+
     if (!this.pages[page]) page = 'dashboard';
     this.currentPage = page;
 

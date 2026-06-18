@@ -494,6 +494,9 @@ body {
 .card-modern .card-body {
   padding: 1.25rem;
 }
+.card-body {
+  overflow: visible !important;
+}
 
 /* Tables */
 .table {
@@ -503,20 +506,21 @@ body {
 .table-responsive {
   overflow-x: auto;
   overflow-y: visible !important;
+  position: relative;
 }
-
-.table-responsive .dropdown {
+.dropdown {
   position: static;
 }
-
-.table-responsive .dropdown-menu {
+.dropdown-menu {
   position: absolute !important;
-  top: auto;
-  left: auto;
+  z-index: 999999 !important;
 }
 
 .dropdown-menu {
   z-index: 2000;
+}
+.card-modern {
+  overflow: visible;
 }
 
 .table thead th {
@@ -540,7 +544,13 @@ body {
 .table-hover tbody tr:hover {
   background: rgba(13, 148, 136, 0.03);
 }
+.table-wrapper {
+  overflow-x: auto;
+}
 
+.table-responsive {
+  overflow: visible;
+}
 /* Avatars */
 .avatar-sm {
   width: 36px;
@@ -705,4 +715,31 @@ body {
 @media print {
   .sidebar, .top-header, .page-actions, .btn { display: none !important; }
   .main-content { margin-left: 0 !important; }
+}
+
+.dropdown-menu {
+  z-index: 999999 !important;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  overflow-y: visible !important;
+  position: relative;
+}
+
+.card-body {
+  overflow: visible !important;
+}
+.dropdown {
+  position: static;
+}
+.card-modern {
+  overflow: visible !important;
+}
+.dropdown-menu {
+  position: absolute !important;
+  z-index: 999999 !important;
+}
+.table-responsive {
+  overflow: visible !important;
 }

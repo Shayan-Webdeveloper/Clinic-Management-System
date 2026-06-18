@@ -60,18 +60,13 @@
                 <input class="form-check-input" type="checkbox" id="remember-me">
                 <label class="form-check-label" for="remember-me">Remember me</label>
               </div>
-              <a href="#" id="forgot-password-link" class="text-primary text-decoration-none small">Forgot password?</a>
+              <a href="./reset-password.html" id="forgot-password-link" class="text-primary text-decoration-none small">Forgot password?</a>
             </div>
             <button type="submit" class="btn btn-primary w-100 btn-lg">Sign In</button>
           </form>
-
-          <p class="text-center mt-4 text-muted">
-            Don't have an account?
-            <a href="#" id="show-register" class="text-primary text-decoration-none fw-medium">Create account</a>
-          </p>
         </div>
 
-        <div id="register-panel" class="d-none">
+        <!-- <div id="register-panel" class="d-none">
           <h3 class="auth-title">Create account</h3>
           <p class="auth-subtitle">Set up your clinic staff account</p>
 
@@ -88,15 +83,6 @@
               <label class="form-label">Password</label>
               <input type="password" class="form-control" id="register-password" placeholder="Min. 6 characters" minlength="6" required>
             </div>
-            <div class="mb-4">
-              <label class="form-label">Role</label>
-              <select class="form-select" id="register-role">
-                <option value="admin">Admin</option>
-                <option value="doctor">Doctor</option>
-                <option value="receptionist" selected>Receptionist</option>
-                <option value="nurse">Nurse</option>
-              </select>
-            </div>
             <button type="submit" class="btn btn-primary w-100 btn-lg">Create Account</button>
           </form>
 
@@ -104,22 +90,41 @@
             Already have an account?
             <a href="#" id="show-login" class="text-primary text-decoration-none fw-medium">Sign in</a>
           </p>
-        </div>
+        </div> -->
 
-        <div id="forgot-panel" class="d-none">
-          <h3 class="auth-title">Reset password</h3>
-          <p class="auth-subtitle">We'll send you a reset link</p>
-          <form id="forgot-form" class="auth-form">
-            <div class="mb-4">
-              <label class="form-label">Email address</label>
-              <input type="email" class="form-control" id="forgot-email" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Send Reset Link</button>
-          </form>
-          <p class="text-center mt-4">
-            <a href="#" id="back-to-login" class="text-primary text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Back to sign in</a>
-          </p>
-        </div>
+       <div id="forgot-panel" class="d-none">
+  <h3 class="auth-title">Reset password</h3>
+  <p class="auth-subtitle">We’ll send a secure reset link to your email</p>
+
+  <form id="forgot-form" class="auth-form">
+    <div class="mb-3">
+      <label class="form-label">Email address</label>
+
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-envelope"></i>
+        </span>
+        <input
+          type="email"
+          class="form-control"
+          id="forgot-email"
+          placeholder="you@clinic.com"
+          required
+        >
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 btn-lg">
+      Send Reset Link
+    </button>
+
+    <div class="text-center mt-3">
+      <a href="#" id="back-to-login" class="text-primary text-decoration-none small">
+        <i class="bi bi-arrow-left me-1"></i>Back to login
+      </a>
+    </div>
+  </form>
+</div> 
       </div>
     </div>
   </div>
@@ -161,7 +166,9 @@ if (adminExists) {
         });
       };
 
-      document.getElementById('show-register').addEventListener('click', e => { e.preventDefault(); show('register-panel'); });
+      // document.getElementById('show-register').addEventListener('click', e => { e.preventDefault();
+        //  show('register-panel'); 
+        // });
       document.getElementById('show-login').addEventListener('click', e => { e.preventDefault(); show('login-panel'); });
       document.getElementById('forgot-password-link').addEventListener('click', e => { e.preventDefault(); show('forgot-panel'); });
       document.getElementById('back-to-login').addEventListener('click', e => { e.preventDefault(); show('login-panel'); });
@@ -178,50 +185,25 @@ if (adminExists) {
           Utils.showToast(err.message || 'Login failed', 'error');
         }
       });
-
-      document.getElementById('register-form').addEventListener('submit', async e => {
+      document.getElementById('forgot-form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
+  const email = document.getElementById('forgot-email').value;
+
   try {
-    const role = document.getElementById('register-role').value;
+    const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password.html'
+    });
 
-    // Check if admin already exists
-    if (role === 'admin') {
-      const { data } = await getSupabase()
-        .from('profiles')
-        .select('id')
-        .eq('role', 'admin');
+    if (error) throw error;
 
-      if (data && data.length > 0) {
-        throw new Error('Admin account already exists. Please choose another role.');
-      }
-    }
-
-    await Auth.signUp(
-      document.getElementById('register-email').value,
-      document.getElementById('register-password').value,
-      document.getElementById('register-name').value,
-      role
-    );
-
-    Utils.showToast('Account created! Check your email to confirm, then sign in.');
+    Utils.showToast('Reset link sent! Check your email.');
     show('login-panel');
 
   } catch (err) {
-    Utils.showToast(err.message || 'Registration failed', 'error');
+    Utils.showToast(err.message || 'Failed to send reset link', 'error');
   }
 });
-
-      document.getElementById('forgot-form').addEventListener('submit', async e => {
-        e.preventDefault();
-        try {
-          await Auth.resetPassword(document.getElementById('forgot-email').value);
-          Utils.showToast('Reset link sent to your email');
-          show('login-panel');
-        } catch (err) {
-          Utils.showToast(err.message || 'Failed to send reset link', 'error');
-        }
-      });
     });
   </script>
   <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>

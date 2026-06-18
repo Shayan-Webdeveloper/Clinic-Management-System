@@ -2,20 +2,26 @@
 
 const Patients = {
   patients: [],
-  searchQuery: '',
+  searchQuery: "",
   showArchived: false,
 
   async render() {
-    document.getElementById('page-content').innerHTML = `
+    document.getElementById("page-content").innerHTML = `
       <div class="page-header">
         <div>
           <h1 class="page-title">Patients</h1>
           <p class="page-subtitle">Manage patient records and medical history</p>
         </div>
         <div class="page-actions">
-          <button class="btn btn-primary" onclick="Patients.openCreateModal()">
-            <i class="bi bi-plus-lg me-1"></i> Add Patient
-          </button>
+          ${
+            Auth.profile?.role === "admin"
+              ? `
+  <button class="btn btn-primary" onclick="Patients.openCreateModal()">
+    <i class="bi bi-plus-lg me-1"></i> Add Patient
+  </button>
+`
+              : ""
+          }
         </div>
       </div>
 
@@ -31,7 +37,7 @@ const Patients = {
             </div>
             <div class="col-md-6 text-md-end">
               <div class="form-check form-switch d-inline-block">
-                <input class="form-check-input" type="checkbox" id="show-archived" ${this.showArchived ? 'checked' : ''}>
+                <input class="form-check-input" type="checkbox" id="show-archived" ${this.showArchived ? "checked" : ""}>
                 <label class="form-check-label" for="show-archived">Show archived</label>
               </div>
             </div>
@@ -44,9 +50,14 @@ const Patients = {
 
       ${this.getModalHTML()}`;
 
-    document.getElementById('patient-search').addEventListener('input',
-      Utils.debounce(e => { this.searchQuery = e.target.value; this.loadPatients(); }, 300));
-    document.getElementById('show-archived').addEventListener('change', e => {
+    document.getElementById("patient-search").addEventListener(
+      "input",
+      Utils.debounce((e) => {
+        this.searchQuery = e.target.value;
+        this.loadPatients();
+      }, 300),
+    );
+    document.getElementById("show-archived").addEventListener("change", (e) => {
       this.showArchived = e.target.checked;
       this.loadPatients();
     });
@@ -56,71 +67,149 @@ const Patients = {
 
   async loadPatients() {
     const sb = getSupabase();
-    let query = sb.from('patients').select('*').order('created_at', { ascending: false });
+    let query = sb
+      .from("patients")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    if (!this.showArchived) query = query.eq('is_archived', false);
+    if (!this.showArchived) query = query.eq("is_archived", false);
 
     const { data, error } = await query;
-    if (error) { Utils.showToast(error.message, 'error'); return; }
+    if (error) {
+      Utils.showToast(error.message, "error");
+      return;
+    }
 
     this.patients = data || [];
     if (this.searchQuery) {
       const q = this.searchQuery.toLowerCase();
-      this.patients = this.patients.filter(p =>
-        p.name?.toLowerCase().includes(q) ||
-        p.phone?.includes(q) ||
-        p.patient_code?.toLowerCase().includes(q) ||
-        p.email?.toLowerCase().includes(q)
+      this.patients = this.patients.filter(
+        (p) =>
+          p.name?.toLowerCase().includes(q) ||
+          p.phone?.includes(q) ||
+          p.patient_code?.toLowerCase().includes(q) ||
+          p.email?.toLowerCase().includes(q),
       );
     }
     this.renderTable();
   },
 
   renderTable() {
-    const container = document.getElementById('patients-table-container');
-    if (!this.patients.length) {
-      container.innerHTML = `<div class="empty-state py-5"><i class="bi bi-people"></i><p>No patients found</p>
-        <button class="btn btn-primary btn-sm" onclick="Patients.openCreateModal()">Add first patient</button></div>`;
-      return;
-    }
+  const container = document.getElementById('patients-table-container');
 
-    container.innerHTML = `<div class="table-responsive">
-      <table class="table table-hover mb-0">
-        <thead><tr>
-          <th>Patient ID</th><th>Name</th><th>Contact</th><th>Age</th><th>Blood Group</th><th>Status</th><th></th>
-        </tr></thead>
-        <tbody>${this.patients.map(p => `
-          <tr class="${p.is_archived ? 'text-muted' : ''}">
-            <td><code>${p.patient_code}</code></td>
-            <td>
-              <div class="d-flex align-items-center gap-2">
-                <div class="avatar-sm">${Utils.getInitials(p.name)}</div>
-                <span class="fw-medium">${Utils.escapeHtml(p.name)}</span>
-              </div>
-            </td>
-            <td>${Utils.escapeHtml(p.phone || '—')}<br><small class="text-muted">${Utils.escapeHtml(p.email || '')}</small></td>
-            <td>${Utils.calculateAge(p.dob)}</td>
-            <td>${p.blood_group || '—'}</td>
-            <td>${p.is_archived ? '<span class="badge bg-secondary-subtle text-secondary">Archived</span>' : '<span class="badge bg-success-subtle text-success">Active</span>'}</td>
-            <td>
-              <div class="dropdown">
-                <button class="btn btn-sm btn-light" data-bs-toggle="dropdown" data-bs-boundary="viewport"><i class="bi bi-three-dots-vertical"></i></button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="#" onclick="Patients.viewPatient('${p.id}'); return false;"><i class="bi bi-eye me-2"></i>View</a></li>
-                  <li><a class="dropdown-item" href="#" onclick="Patients.openEditModal('${p.id}'); return false;"><i class="bi bi-pencil me-2"></i>Edit</a></li>
-                  <li><a class="dropdown-item" href="#" onclick="App.navigate('appointments'); Appointments.openCreateModal('${p.id}'); return false;"><i class="bi bi-calendar-plus me-2"></i>Book Appointment</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item ${p.is_archived ? 'text-success' : 'text-warning'}" href="#" onclick="Patients.toggleArchive('${p.id}', ${!p.is_archived}); return false;">
-                    <i class="bi bi-${p.is_archived ? 'arrow-counterclockwise' : 'archive'} me-2"></i>${p.is_archived ? 'Restore' : 'Archive'}
-                  </a></li>
-                </ul>
-              </div>
-            </td>
-          </tr>`).join('')}
+  if (!this.patients.length) {
+    container.innerHTML = `
+      <div class="empty-state py-5">
+        <i class="bi bi-people"></i>
+        <p>No patients found</p>
+        <button class="btn btn-primary btn-sm" onclick="Patients.openCreateModal()">
+          Add first patient
+        </button>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" style="position: relative; z-index: 0;">
+        <thead>
+          <tr>
+            <th>Patient ID</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Age</th>
+            <th>Blood Group</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${this.patients.map(p => `
+            <tr class="${p.is_archived ? 'text-muted' : ''}">
+              <td><code>${p.patient_code}</code></td>
+
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-sm">${Utils.getInitials(p.name)}</div>
+                  <span class="fw-medium">${Utils.escapeHtml(p.name)}</span>
+                </div>
+              </td>
+
+              <td>
+                ${Utils.escapeHtml(p.phone || '—')}<br>
+                <small class="text-muted">${Utils.escapeHtml(p.email || '')}</small>
+              </td>
+
+              <td>${Utils.calculateAge(p.dob)}</td>
+
+              <td>${p.blood_group || '—'}</td>
+
+              <td>
+                ${
+                  p.is_archived
+                    ? '<span class="badge bg-secondary-subtle text-secondary">Archived</span>'
+                    : '<span class="badge bg-success-subtle text-success">Active</span>'
+                }
+              </td>
+
+              <td>
+                <div class="dropdown">
+                 <button class="btn btn-sm btn-light"
+        data-bs-toggle="dropdown"
+        data-bs-display="static">
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </button>
+
+                  <ul class="dropdown-menu dropdown-menu-end">
+
+  <!-- VIEW -->
+  <li>
+    <a class="dropdown-item" href="#" onclick="Patients.viewPatient('${p.id}'); return false;">
+      <i class="bi bi-eye me-2"></i>View
+    </a>
+  </li>
+
+  <!-- EDIT (ADMIN ONLY) -->
+  ${Auth.profile?.role === 'admin' ? `
+  <li>
+    <a class="dropdown-item" href="#" onclick="Patients.openEditModal('${p.id}'); return false;">
+      <i class="bi bi-pencil me-2"></i>Edit
+    </a>
+  </li>
+  ` : ''}
+
+  <!-- BOOK APPOINTMENT (ADMIN + RECEPTIONIST ONLY) -->
+  ${(Auth.profile?.role === 'admin' || Auth.profile?.role === 'receptionist') ? `
+  <li>
+    <a class="dropdown-item" href="#" onclick="App.navigate('appointments'); Appointments.openCreateModal('${p.id}'); return false;">
+      <i class="bi bi-calendar-plus me-2"></i>Book Appointment
+    </a>
+  </li>
+  ` : ''}
+
+  <li><hr class="dropdown-divider"></li>
+
+  <!-- ARCHIVE -->
+  <li>
+    <a class="dropdown-item ${p.is_archived ? 'text-success' : 'text-warning'}"
+       href="#"
+       onclick="Patients.toggleArchive('${p.id}', ${!p.is_archived}); return false;">
+      <i class="bi bi-${p.is_archived ? 'arrow-counterclockwise' : 'archive'} me-2"></i>
+      ${p.is_archived ? 'Restore' : 'Archive'}
+    </a>
+  </li>
+
+</ul>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
         </tbody>
       </table>
-    </div>`;
-  },
+    </div>
+  `;
+},
 
   getModalHTML() {
     return `<div class="modal fade" id="patientModal" tabindex="-1">
@@ -163,7 +252,7 @@ const Patients = {
                   <label class="form-label">Blood Group</label>
                   <select class="form-select" id="patient-blood">
                     <option value="">Select</option>
-                    ${['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(b => `<option value="${b}">${b}</option>`).join('')}
+                    ${["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((b) => `<option value="${b}">${b}</option>`).join("")}
                   </select>
                 </div>
                 <div class="col-md-8">
@@ -203,122 +292,164 @@ const Patients = {
   },
 
   openCreateModal() {
-    document.getElementById('patientModalTitle').textContent = 'Add Patient';
-    document.getElementById('patientForm').reset();
-    document.getElementById('patient-id').value = '';
+    document.getElementById("patientModalTitle").textContent = "Add Patient";
+    document.getElementById("patientForm").reset();
+    document.getElementById("patient-id").value = "";
     this.bindForm();
-    new bootstrap.Modal(document.getElementById('patientModal')).show();
+    new bootstrap.Modal(document.getElementById("patientModal")).show();
   },
 
   async openEditModal(id) {
-    const p = this.patients.find(x => x.id === id) ||
-      (await getSupabase().from('patients').select('*').eq('id', id).single()).data;
+    const p =
+      this.patients.find((x) => x.id === id) ||
+      (await getSupabase().from("patients").select("*").eq("id", id).single())
+        .data;
     if (!p) return;
 
-    document.getElementById('patientModalTitle').textContent = 'Edit Patient';
-    document.getElementById('patient-id').value = p.id;
-    document.getElementById('patient-name').value = p.name || '';
-    document.getElementById('patient-gender').value = p.gender || '';
-    document.getElementById('patient-dob').value = p.dob || '';
-    document.getElementById('patient-phone').value = p.phone || '';
-    document.getElementById('patient-email').value = p.email || '';
-    document.getElementById('patient-blood').value = p.blood_group || '';
-    document.getElementById('patient-address').value = p.address || '';
-    document.getElementById('patient-emergency').value = p.emergency_contact || '';
-    document.getElementById('patient-history').value = p.medical_history || '';
+    document.getElementById("patientModalTitle").textContent = "Edit Patient";
+    document.getElementById("patient-id").value = p.id;
+    document.getElementById("patient-name").value = p.name || "";
+    document.getElementById("patient-gender").value = p.gender || "";
+    document.getElementById("patient-dob").value = p.dob || "";
+    document.getElementById("patient-phone").value = p.phone || "";
+    document.getElementById("patient-email").value = p.email || "";
+    document.getElementById("patient-blood").value = p.blood_group || "";
+    document.getElementById("patient-address").value = p.address || "";
+    document.getElementById("patient-emergency").value =
+      p.emergency_contact || "";
+    document.getElementById("patient-history").value = p.medical_history || "";
     this.bindForm();
-    new bootstrap.Modal(document.getElementById('patientModal')).show();
+    new bootstrap.Modal(document.getElementById("patientModal")).show();
   },
 
   bindForm() {
-    const form = document.getElementById('patientForm');
+    const form = document.getElementById("patientForm");
     form.onsubmit = async (e) => {
       e.preventDefault();
-      const id = document.getElementById('patient-id').value;
+      const id = document.getElementById("patient-id").value;
       const payload = {
-        name: document.getElementById('patient-name').value.trim(),
-        gender: document.getElementById('patient-gender').value || null,
-        dob: document.getElementById('patient-dob').value || null,
-        phone: document.getElementById('patient-phone').value.trim() || null,
-        email: document.getElementById('patient-email').value.trim() || null,
-        blood_group: document.getElementById('patient-blood').value || null,
-        address: document.getElementById('patient-address').value.trim() || null,
-        emergency_contact: document.getElementById('patient-emergency').value.trim() || null,
-        medical_history: document.getElementById('patient-history').value.trim() || null,
-        updated_at: new Date().toISOString()
+        name: document.getElementById("patient-name").value.trim(),
+        gender: document.getElementById("patient-gender").value || null,
+        dob: document.getElementById("patient-dob").value || null,
+        phone: document.getElementById("patient-phone").value.trim() || null,
+        email: document.getElementById("patient-email").value.trim() || null,
+        blood_group: document.getElementById("patient-blood").value || null,
+        address:
+          document.getElementById("patient-address").value.trim() || null,
+        emergency_contact:
+          document.getElementById("patient-emergency").value.trim() || null,
+        medical_history:
+          document.getElementById("patient-history").value.trim() || null,
+        updated_at: new Date().toISOString(),
       };
 
       Utils.showLoading(true);
       const sb = getSupabase();
-      let error;
+      let result;
+
       if (id) {
-        ({ error } = await sb.from('patients').update(payload).eq('id', id));
+        result = await sb.from("patients").update(payload).eq("id", id);
       } else {
-        ({ error } = await sb.from('patients').insert(payload));
+        result = await sb.from("patients").insert(payload);
       }
+
       Utils.showLoading(false);
 
-      if (error) { Utils.showToast(error.message, 'error'); return; }
-      Utils.showToast(id ? 'Patient updated' : 'Patient added');
-      bootstrap.Modal.getInstance(document.getElementById('patientModal')).hide();
+      const { error, data } = result;
+
+      // ❌ REAL ERROR CHECK
+      if (error) {
+        Utils.showToast(error.message, "error");
+        return;
+      }
+
+      // ❌ EXTRA SAFETY: detect silent failure
+      if (id && (!data || data.length === 0)) {
+        Utils.showToast("Update failed (no permission)", "error");
+        return;
+      }
+
+      // ✅ SUCCESS ONLY IF REAL
+      Utils.showToast(
+        id ? "Patient updated successfully" : "Patient added successfully",
+      );
+      bootstrap.Modal.getInstance(
+        document.getElementById("patientModal"),
+      ).hide();
       await this.loadPatients();
     };
   },
 
   async viewPatient(id) {
     const sb = getSupabase();
-    const { data: p } = await sb.from('patients').select('*').eq('id', id).single();
+    const { data: p } = await sb
+      .from("patients")
+      .select("*")
+      .eq("id", id)
+      .single();
     if (!p) return;
 
-    const { data: appts } = await sb.from('appointments')
-      .select('*, doctors(name)')
-      .eq('patient_id', id)
-      .order('appointment_date', { ascending: false })
+    const { data: appts } = await sb
+      .from("appointments")
+      .select("*, doctors(name)")
+      .eq("patient_id", id)
+      .order("appointment_date", { ascending: false })
       .limit(5);
 
-    document.getElementById('patient-view-content').innerHTML = `
+    document.getElementById("patient-view-content").innerHTML = `
       <div class="patient-profile-header mb-4">
         <div class="avatar-lg">${Utils.getInitials(p.name)}</div>
         <div>
           <h4 class="mb-1">${Utils.escapeHtml(p.name)}</h4>
-          <p class="text-muted mb-0">${p.patient_code} · ${p.gender || '—'} · ${Utils.calculateAge(p.dob)}</p>
+          <p class="text-muted mb-0">${p.patient_code} · ${p.gender || "—"} · ${Utils.calculateAge(p.dob)}</p>
         </div>
       </div>
       <div class="row g-3">
-        <div class="col-md-6"><label class="text-muted small">Phone</label><p>${Utils.escapeHtml(p.phone || '—')}</p></div>
-        <div class="col-md-6"><label class="text-muted small">Email</label><p>${Utils.escapeHtml(p.email || '—')}</p></div>
+        <div class="col-md-6"><label class="text-muted small">Phone</label><p>${Utils.escapeHtml(p.phone || "—")}</p></div>
+        <div class="col-md-6"><label class="text-muted small">Email</label><p>${Utils.escapeHtml(p.email || "—")}</p></div>
         <div class="col-md-6"><label class="text-muted small">Date of Birth</label><p>${Utils.formatDate(p.dob)}</p></div>
-        <div class="col-md-6"><label class="text-muted small">Blood Group</label><p>${p.blood_group || '—'}</p></div>
-        <div class="col-12"><label class="text-muted small">Address</label><p>${Utils.escapeHtml(p.address || '—')}</p></div>
-        <div class="col-12"><label class="text-muted small">Emergency Contact</label><p>${Utils.escapeHtml(p.emergency_contact || '—')}</p></div>
-        <div class="col-12"><label class="text-muted small">Medical History</label><p>${Utils.escapeHtml(p.medical_history || 'No notes recorded')}</p></div>
+        <div class="col-md-6"><label class="text-muted small">Blood Group</label><p>${p.blood_group || "—"}</p></div>
+        <div class="col-12"><label class="text-muted small">Address</label><p>${Utils.escapeHtml(p.address || "—")}</p></div>
+        <div class="col-12"><label class="text-muted small">Emergency Contact</label><p>${Utils.escapeHtml(p.emergency_contact || "—")}</p></div>
+        <div class="col-12"><label class="text-muted small">Medical History</label><p>${Utils.escapeHtml(p.medical_history || "No notes recorded")}</p></div>
       </div>
-      ${appts?.length ? `<hr><h6>Recent Appointments</h6>
-        <ul class="list-unstyled">${appts.map(a => `
+      ${
+        appts?.length
+          ? `<hr><h6>Recent Appointments</h6>
+        <ul class="list-unstyled">${appts
+          .map(
+            (a) => `
           <li class="d-flex justify-content-between py-2 border-bottom">
             <span>${Utils.formatDateTime(a.appointment_date)} — ${a.doctors?.name}</span>
             ${Utils.statusBadge(a.status)}
-          </li>`).join('')}</ul>` : ''}`;
+          </li>`,
+          )
+          .join("")}</ul>`
+          : ""
+      }`;
 
-    new bootstrap.Modal(document.getElementById('patientViewModal')).show();
+    new bootstrap.Modal(document.getElementById("patientViewModal")).show();
   },
 
   async toggleArchive(id, archive) {
     const { error } = await getSupabase()
-      .from('patients')
+      .from("patients")
       .update({ is_archived: archive, updated_at: new Date().toISOString() })
-      .eq('id', id);
-    if (error) { Utils.showToast(error.message, 'error'); return; }
-    Utils.showToast(archive ? 'Patient archived' : 'Patient restored');
+      .eq("id", id);
+    if (error) {
+      Utils.showToast(error.message, "error");
+      return;
+    }
+    Utils.showToast(archive ? "Patient archived" : "Patient restored");
     await this.loadPatients();
   },
 
   async getAllForSelect() {
     const { data } = await getSupabase()
-      .from('patients')
-      .select('id, name, patient_code')
-      .eq('is_archived', false)
-      .order('name');
+      .from("patients")
+      .select("id, name, patient_code")
+      .eq("is_archived", false)
+      .order("name");
     return data || [];
-  }
+  },
 };

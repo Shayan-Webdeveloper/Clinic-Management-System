@@ -29,9 +29,10 @@ const Doctors = {
 
   async loadDoctors() {
     const { data, error } = await getSupabase()
-      .from('doctors')
-      .select('*')
-      .order('name');
+.from('profiles')
+.select('*')
+.eq('role', 'doctor')
+.order('full_name');
 
     if (error) { Utils.showToast(error.message, 'error'); return; }
     this.doctors = data || [];
@@ -51,9 +52,9 @@ const Doctors = {
         <div class="card card-modern doctor-card h-100">
           <div class="card-body">
             <div class="d-flex align-items-start gap-3 mb-3">
-              <div class="avatar-lg bg-primary-subtle text-primary">${Utils.getInitials(d.name)}</div>
+              <div class="avatar-lg bg-primary-subtle text-primary">${Utils.getInitials(d.full_name)}</div>
               <div class="flex-grow-1">
-                <h5 class="mb-1">${Utils.escapeHtml(d.name)}</h5>
+                <h5 class="mb-1">${Utils.escapeHtml(d.full_name)}</h5>
                 <p class="text-primary mb-0 small">${Utils.escapeHtml(d.specialization || 'General')}</p>
                 ${d.is_active
                   ? '<span class="badge bg-success-subtle text-success mt-1">Active</span>'
@@ -155,7 +156,7 @@ const Doctors = {
     if (!d) return;
     document.getElementById('doctorModalTitle').textContent = 'Edit Doctor';
     document.getElementById('doctor-id').value = d.id;
-    document.getElementById('doctor-name').value = d.name || '';
+    document.getElementById('doctor-name').value = d.full_name || '';
     document.getElementById('doctor-specialization').value = d.specialization || '';
     document.getElementById('doctor-qualifications').value = d.qualifications || '';
     document.getElementById('doctor-phone').value = d.phone || '';
