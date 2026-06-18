@@ -43,7 +43,7 @@ const Auth = {
     return data;
   },
 
-  async signUp(email, password, fullName, role = 'receptionist') {
+  async signUp(email, password, fullName, role = 'admin') {
     Utils.showLoading(true);
     const sb = getSupabase();
     const { data, error } = await sb.auth.signUp({

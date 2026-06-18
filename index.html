@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
 </head>
+
 <body class="auth-page">
 
   <div class="auth-container">
@@ -60,13 +62,17 @@
                 <input class="form-check-input" type="checkbox" id="remember-me">
                 <label class="form-check-label" for="remember-me">Remember me</label>
               </div>
-              <a href="./reset-password.html" id="forgot-password-link" class="text-primary text-decoration-none small">Forgot password?</a>
+              <a href="./reset-password.html" id="forgot-password-link"
+                class="text-primary text-decoration-none small">Forgot password?</a>
             </div>
             <button type="submit" class="btn btn-primary w-100 btn-lg">Sign In</button>
           </form>
         </div>
-
-        <!-- <div id="register-panel" class="d-none">
+<p class="text-center mt-4 text-muted" id ="show-register">
+            Don't have an account?
+            <a href="#" class="text-primary text-decoration-none fw-medium">Sign up (Only for Admins)</a>
+          </p>
+        <div id="register-panel" class="d-none">
           <h3 class="auth-title">Create account</h3>
           <p class="auth-subtitle">Set up your clinic staff account</p>
 
@@ -86,45 +92,40 @@
             <button type="submit" class="btn btn-primary w-100 btn-lg">Create Account</button>
           </form>
 
+         
           <p class="text-center mt-4 text-muted">
             Already have an account?
             <a href="#" id="show-login" class="text-primary text-decoration-none fw-medium">Sign in</a>
           </p>
-        </div> -->
+        </div> 
 
-       <div id="forgot-panel" class="d-none">
-  <h3 class="auth-title">Reset password</h3>
-  <p class="auth-subtitle">We’ll send a secure reset link to your email</p>
+        <div id="forgot-panel" class="d-none">
+          <h3 class="auth-title">Reset password</h3>
+          <p class="auth-subtitle">We’ll send a secure reset link to your email</p>
 
-  <form id="forgot-form" class="auth-form">
-    <div class="mb-3">
-      <label class="form-label">Email address</label>
+          <form id="forgot-form" class="auth-form">
+            <div class="mb-3">
+              <label class="form-label">Email address</label>
 
-      <div class="input-group">
-        <span class="input-group-text">
-          <i class="bi bi-envelope"></i>
-        </span>
-        <input
-          type="email"
-          class="form-control"
-          id="forgot-email"
-          placeholder="you@clinic.com"
-          required
-        >
-      </div>
-    </div>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-envelope"></i>
+                </span>
+                <input type="email" class="form-control" id="forgot-email" placeholder="you@clinic.com" required>
+              </div>
+            </div>
 
-    <button type="submit" class="btn btn-primary w-100 btn-lg">
-      Send Reset Link
-    </button>
+            <button type="submit" class="btn btn-primary w-100 btn-lg">
+              Send Reset Link
+            </button>
 
-    <div class="text-center mt-3">
-      <a href="#" id="back-to-login" class="text-primary text-decoration-none small">
-        <i class="bi bi-arrow-left me-1"></i>Back to login
-      </a>
-    </div>
-  </form>
-</div> 
+            <div class="text-center mt-3">
+              <a href="#" id="back-to-login" class="text-primary text-decoration-none small">
+                <i class="bi bi-arrow-left me-1"></i>Back to login
+              </a>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -136,76 +137,152 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/config.js"></script>
-  <script src="js/utils.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/utils.js"></script>
   <script src="js/auth.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      initSupabase();
-      await Auth.init();
-      const { data: adminExists, error } = await getSupabase()
-  .rpc('admin_exists');
+const regBtn = document.getElementById('show-register');
+const loginBtn = document.getElementById('show-login');
+regBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('register-panel').classList.remove('d-none');
+  document.getElementById('login-panel').classList.add('d-none');
+  regBtn.classList.add('d-none');
+  loginBtn.classList.remove('d-none');
+});
+loginBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('login-panel').classList.remove('d-none');
+  document.getElementById('register-panel').classList.add('d-none');
+  loginBtn.classList.add('d-none');
+  regBtn.classList.remove('d-none');
+});
 
-if (adminExists) {
-  const adminOption = document.querySelector(
-    '#register-role option[value="admin"]'
-  );
+document.addEventListener('DOMContentLoaded', async () => {
 
-  if (adminOption) {
-    adminOption.remove();
+  initSupabase();
+  await Auth.init();
+
+  // -----------------------------
+  // SAFE PANEL SWITCH (FIXED)
+  // -----------------------------
+  const show = (panel) => {
+    ['login-panel', 'register-panel', 'forgot-panel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('d-none', id !== panel);
+    });
+  };
+
+  // -----------------------------
+  // NAV BUTTONS (FIXED)
+  // -----------------------------
+  const registerBtn = document.getElementById('show-register');
+  const loginBtn = document.getElementById('show-login');
+
+  if (registerBtn) {
+    registerBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      show('register-panel');
+    });
   }
-}
-      if (Auth.isAuthenticated()) {
-        window.location.href = 'app.html';
-        return;
+
+  if (loginBtn) {
+    loginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      show('login-panel');
+    });
+  }
+
+  document.getElementById('forgot-password-link')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    show('forgot-panel');
+  });
+
+  document.getElementById('back-to-login')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    show('login-panel');
+  });
+
+  // -----------------------------
+  // REMEMBER ME LOAD (FIXED)
+  // -----------------------------
+  const savedEmail = localStorage.getItem('rememberedEmail');
+  if (savedEmail) {
+    document.getElementById('login-email').value = savedEmail;
+    document.getElementById('remember-me').checked = true;
+  }
+
+  // -----------------------------
+  // LOGIN (ONLY ONE HANDLER FIXED)
+  // -----------------------------
+  document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const remember = document.getElementById('remember-me').checked;
+
+    try {
+      await Auth.signIn(email, password);
+
+      if (remember) {
+        localStorage.setItem('rememberedEmail', email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
       }
 
-      const show = (panel) => {
-        ['login-panel', 'register-panel', 'forgot-panel'].forEach(id => {
-          document.getElementById(id).classList.toggle('d-none', id !== panel);
-        });
-      };
+      window.location.href = 'app.html';
 
-      // document.getElementById('show-register').addEventListener('click', e => { e.preventDefault();
-        //  show('register-panel'); 
-        // });
-      document.getElementById('show-login').addEventListener('click', e => { e.preventDefault(); show('login-panel'); });
-      document.getElementById('forgot-password-link').addEventListener('click', e => { e.preventDefault(); show('forgot-panel'); });
-      document.getElementById('back-to-login').addEventListener('click', e => { e.preventDefault(); show('login-panel'); });
+    } catch (err) {
+      Utils.showToast(err.message || 'Login failed', 'error');
+    }
+  });
 
-      document.getElementById('login-form').addEventListener('submit', async e => {
-        e.preventDefault();
-        try {
-          await Auth.signIn(
-            document.getElementById('login-email').value,
-            document.getElementById('login-password').value
-          );
-          window.location.href = 'app.html';
-        } catch (err) {
-          Utils.showToast(err.message || 'Login failed', 'error');
-        }
+  // -----------------------------
+  // REGISTER (FIXED)
+  // -----------------------------
+  document.getElementById('register-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('register-name').value;
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+
+    try {
+      await Auth.signUp(email, password, name, 'receptionist');
+
+      Utils.showToast('Account created successfully!');
+      show('login-panel');
+
+    } catch (err) {
+      Utils.showToast(err.message || 'Registration failed', 'error');
+    }
+  });
+
+  // -----------------------------
+  // FORGOT PASSWORD (FIXED)
+  // -----------------------------
+  document.getElementById('forgot-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('forgot-email').value;
+
+    try {
+      await getSupabase().auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password.html'
       });
-      document.getElementById('forgot-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
 
-  const email = document.getElementById('forgot-email').value;
+      Utils.showToast('Reset link sent! Check your email.');
+      show('login-panel');
 
-  try {
-    const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/reset-password.html'
-    });
+    } catch (err) {
+      Utils.showToast(err.message || 'Failed to send reset link', 'error');
+    }
+  });
 
-    if (error) throw error;
-
-    Utils.showToast('Reset link sent! Check your email.');
-    show('login-panel');
-
-  } catch (err) {
-    Utils.showToast(err.message || 'Failed to send reset link', 'error');
-  }
 });
-    });
-  </script>
+</script>
   <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 </body>
+
 </html>
